@@ -21,7 +21,9 @@ namespace Hjson
 	public abstract class JsonValue: IEnumerable
 	{
 		public string Comment { get; set; }
-		public bool Inline { get; set; }
+		//public bool Inline { get; set; }
+		//public bool InsertNewLine { get; set; }
+		public HjsonValue.Flags Flags { get; set; }
 
 		internal static string eol = Environment.NewLine;
 
@@ -153,12 +155,16 @@ namespace Hjson
 		public static implicit operator JsonValue(float value) => new JsonPrimitive(value);
 		/// <summary>Converts from int.</summary>
 		public static implicit operator JsonValue(int value) => new JsonPrimitive(value);
+		/// <summary>Converts from uint.</summary>
+		public static implicit operator JsonValue(uint value) => new JsonPrimitive(value);
 		/// <summary>Converts from long.</summary>
 		public static implicit operator JsonValue(long value) => new JsonPrimitive(value);
 		/// <summary>Converts from ulong.</summary>
 		public static implicit operator JsonValue(ulong value) => new JsonPrimitive(value);
 		/// <summary>Converts from short.</summary>
 		public static implicit operator JsonValue(short value) => new JsonPrimitive(value);
+		/// <summary>Converts from ushort.</summary>
+		public static implicit operator JsonValue(ushort value) => new JsonPrimitive(value);
 		/// <summary>Converts from string.</summary>
 		public static implicit operator JsonValue(string value) => new JsonPrimitive(value);
 

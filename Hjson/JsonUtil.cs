@@ -6,6 +6,12 @@ using System.Text;
 
 namespace Hjson
 {
+	public interface IJsonConvertible<T>
+	{
+		public static abstract bool TrySerialize(T value, out JsonValue json);
+		public static abstract bool TryDeserialize(JsonValue json, out T value);
+	}
+
 	/// <summary>Provides Json extension methods.</summary>
 	public static class JsonUtil
 	{

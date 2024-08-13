@@ -433,7 +433,7 @@ namespace Hjson
 		private JsonValue readTfnns(int c)
 		{
 			if (HjsonValue.IsPunctuatorChar((char)c))
-				throw this.ParseError("Found a punctuator character '" + c + "' when expecting a quoteless string (check your syntax)");
+				throw this.ParseError("Found a punctuator character '" + (char)c + "' when expecting a quoteless string (check your syntax)");
 
 			this.sb.Length = 0;
 			for (; ; )
@@ -450,7 +450,16 @@ namespace Hjson
 						switch (ch)
 						{
 							case 'f': if (this.sb.ToString().Trim() == "false") return false; break;
-							case 'n': if (this.sb.ToString().Trim() == "null") return null; break;
+							case 'n':
+							{
+								if (this.sb.ToString().Trim() == "null") return null;
+								//else if (this.sb.ToString().Trim() == "nan")
+								//{
+								//	Console.WriteLine("Found NaN!");
+								//	return double.NaN;
+								//}
+							}
+							break;
 							case 't': if (this.sb.ToString().Trim() == "true") return true; break;
 							default:
 							if ((ch == '-' || ch == '+') || (ch >= '0' && ch <= '9'))

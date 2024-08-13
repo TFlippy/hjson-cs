@@ -41,7 +41,7 @@ namespace Hjson
 		/// <summary>Initializes a new float.</summary>
 		public JsonPrimitive(float value)
 		{
-			this.value = (double)value;
+			this.value = value;
 		}
 
 		/// <summary>Initializes a new long.</summary>
@@ -126,12 +126,30 @@ namespace Hjson
 			switch (this.JsonType)
 			{
 				case JsonType.String:
-				return ((string)this.value) ?? "";
+				{
+					return ((string)this.value) ?? "";
+				}
 				case JsonType.Number:
-				// use ToLowerInvariant() to convert E to e
-				return ((IFormattable)this.value).ToString("G", NumberFormatInfo.InvariantInfo).ToLowerInvariant();
+				{
+					var type = this.value.GetType();
+					if (type == typeof(float))
+					{
+						return ((IFormattable)this.value).ToString("0.000###", NumberFormatInfo.InvariantInfo).ToLowerInvariant();
+					}
+					else if (type == typeof(double))
+					{
+						return ((IFormattable)this.value).ToString("0.000#######", NumberFormatInfo.InvariantInfo).ToLowerInvariant();
+					}
+					else
+					{
+						// use ToLowerInvariant() to convert E to e
+						return ((IFormattable)this.value).ToString("G", NumberFormatInfo.InvariantInfo).ToLowerInvariant();
+					}
+				}
 				default:
-				throw new InvalidOperationException();
+				{
+					throw new InvalidOperationException();
+				}
 			}
 		}
 	}

@@ -38,7 +38,11 @@ namespace Hjson
 		/// <summary>Gets or sets the value for the specified key.</summary>
 		public sealed override JsonValue this[string key]
 		{
-			get => this.map[key];
+			get
+			{
+				this.map.TryGetValue(key, out var value);
+				return value;
+			}
 			set => this.map[key] = value;
 		}
 
@@ -99,6 +103,55 @@ namespace Hjson
 
 		/// <summary>Gets the value associated with the specified key.</summary>
 		public bool TryGetValue(string key, out JsonValue value) => this.map.TryGetValue(key, out value);
+
+		/// <summary>Gets the value associated with the specified key.</summary>
+		public bool TryGetValue<T>(string key, out T value)
+		{
+			value = default;
+
+			var obj = default(object);
+			if (this.map.TryGetValue(key, out var json) && (obj = Convert.ChangeType(json.ToValue(), typeof(T))) != null)
+			{
+				value = (T)obj;
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool TryGetValue1<T>(string key, ref T value)
+		{
+			var obj = default(object);
+			if (this.map.TryGetValue(key, out var json) && (obj = Convert.ChangeType(json.ToValue(), typeof(T))) != null)
+			{
+				value = (T)obj;
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool TryGetValue2<T>(string key, ref T value) where T: IJsonConvertible<T>
+		{
+			if (this.map.TryGetValue(key, out var json) && T.TryDeserialize(json, out value))
+			{
+				return true;
+			}
+			return false;
+		}
+
+		public bool TryGetValue3<T>(string key, ref T value) where T : unmanaged, Enum
+		{
+			if (this.map.TryGetValue(key, out var json))
+			{
+				var enum_value = json.Qs();
+				if (Enum.TryParse<T>(enum_value, true, out value))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
 
 		void ICollection<JsonPair>.Add(JsonPair item) => this.Add(item);
 

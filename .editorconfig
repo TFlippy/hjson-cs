@@ -252,3 +252,12 @@ dotnet_diagnostic.IDE0017.severity = none
 
 # IDE0005: Using directive is unnecessary.
 dotnet_diagnostic.IDE0005.severity = suggestion
+
+# CS3002: Return type is not CLS-compliant
+dotnet_diagnostic.CS3002.severity = silent
+
+# CS3009: Base type is not CLS-compliant
+dotnet_diagnostic.CS3009.severity = none
+
+[*.{cs,vb}]
+dotnet_diagnostic.CA1014.severity=silent

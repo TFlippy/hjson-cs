@@ -78,140 +78,145 @@ namespace Hjson
 			switch (value.JsonType)
 			{
 				case JsonType.Object:
-				var obj = value.Qo();
-				//var kw = this.writeWsc ? obj as WscJsonObject : null;
-				//var showBraces = !isRootObject || (kw != null ? kw.RootBraces : this.emitRootBraces);
-				var showBraces = !isRootObject || this.emitRootBraces;
-				if (!noIndent) this.nl(tw, level);
-
-
-				if (showBraces) tw.Write('{');
-				else level--; // reduce level for root
-
-				//if (kw != null)
-				//{
-				//	var kwl = this.getWsc(kw.Comments, "");
-				//	foreach (var key in kw.Order.Concat(kw.Keys).Distinct())
-				//	{
-				//		if (!obj.ContainsKey(key)) continue;
-				//		var val = obj[key];
-				//		tw.Write(kwl);
-				//		this.nl(tw, level + 1);
-				//		kwl = this.getWsc(kw.Comments, key);
-
-				//		tw.Write(escapeName(key));
-				//		tw.Write(":");
-				//		this.Save(val, tw, level + 1, this.testWsc(kwl), " ");
-				//	}
-				//	tw.Write(kwl);
-				//	if (showBraces) this.nl(tw, level);
-				//}
-				//else
-				//{
-				if (obj.Count > 0)
 				{
-					var skipFirst = !showBraces;
-					foreach (var pair in obj)
-					{
-						if (!skipFirst) this.nl(tw, level + 1); else skipFirst = false;
+					var obj = value.Qo();
+					var showBraces = !isRootObject || this.emitRootBraces;
+					if (!noIndent) this.nl(tw, level);
 
-						if (!string.IsNullOrEmpty(pair.Value.Comment))
+					if (showBraces) tw.Write('{');
+					else level--; // reduce level for root
+
+					if (obj.Count > 0)
+					{
+						var skipFirst = !showBraces;
+						foreach (var pair in obj)
 						{
-							tw.Write($"// {pair.Value.Comment}");
-							this.nl(tw, level + 1);
+							if (!skipFirst) this.nl(tw, level + 1); else skipFirst = false;
+
+							if (pair.Value.Flags.HasFlag(HjsonValue.Flags.InsertNewLine)) this.nl(tw, level + 1);
+
+							if (!string.IsNullOrEmpty(pair.Value.Comment))
+							{
+								tw.Write($"// {pair.Value.Comment}");
+								this.nl(tw, level + 1);
+							}
+
+							tw.Write(escapeName(pair.Key));
+							tw.Write(":");
+							this.Save(pair.Value, tw, level + 1, false, " ");
+
+							if (pair.Value.Flags.HasFlag(HjsonValue.Flags.NextNewLine)) this.nl(tw, level + 1);
 						}
-
-						tw.Write(escapeName(pair.Key));
-						tw.Write(":");
-						this.Save(pair.Value, tw, level + 1, false, " ");
-					}
-				}
-				else
-				{
-					this.nl(tw, level);
-				}
-
-				if (showBraces) this.nl(tw, level);
-
-				if (showBraces) tw.Write('}');
-				if (level == 0) tw.Write(JsonValue.eol);
-				break;
-				case JsonType.Array:
-				int i = 0, n = value.Count;
-				if (!noIndent)
-				{
-					if (n > 0 && !value.Inline) this.nl(tw, level);
-					else tw.Write(separator);
-				}
-				tw.Write('[');
-				WscJsonArray whiteL = null;
-				string wsl = null;
-				if (this.writeWsc)
-				{
-					whiteL = value as WscJsonArray;
-					if (whiteL != null) wsl = this.getWsc(whiteL.Comments, 0);
-				}
-				for (; i < n; i++)
-				{
-					var v = value[i];
-					if (whiteL != null)
-					{
-						tw.Write(wsl);
-						wsl = this.getWsc(whiteL.Comments, i + 1);
-					}
-
-					if (value.Inline)
-					{
-						this.Save(v, tw, level + 1, wsl != null && this.testWsc(wsl), (i == 0) ? " " : ", ", true);
 					}
 					else
 					{
-						this.nl(tw, level + 1);
-						this.Save(v, tw, level + 1, wsl != null && this.testWsc(wsl), "", true);
+						this.nl(tw, level);
+					}
+
+					if (showBraces) this.nl(tw, level);
+
+					if (showBraces) tw.Write('}');
+					//if (level == 0) tw.Write(JsonValue.eol);
+				}
+				break;
+
+				case JsonType.Array:
+				{
+					int i = 0, n = value.Count;
+					if (!noIndent)
+					{
+						if (n > 0 && !value.Flags.HasFlag(HjsonValue.Flags.Inline)) this.nl(tw, level);
+						else tw.Write(separator);
+					}
+					tw.Write('[');
+					WscJsonArray whiteL = null;
+					string wsl = null;
+					if (this.writeWsc)
+					{
+						whiteL = value as WscJsonArray;
+						if (whiteL != null) wsl = this.getWsc(whiteL.Comments, 0);
+					}
+					for (; i < n; i++)
+					{
+						var v = value[i];
+						if (whiteL != null)
+						{
+							tw.Write(wsl);
+							wsl = this.getWsc(whiteL.Comments, i + 1);
+						}
+
+						if (value.Flags.HasFlag(HjsonValue.Flags.Inline))
+						{
+							this.Save(v, tw, level + 1, wsl != null && this.testWsc(wsl), (i == 0) ? "" : ", ", true);
+						}
+						else
+						{
+							this.nl(tw, level + 1);
+							this.Save(v, tw, level + 1, wsl != null && this.testWsc(wsl), "", true);
+						}
+					}
+					if (whiteL != null) tw.Write(wsl);
+					if (n > 0 && !value.Flags.HasFlag(HjsonValue.Flags.Inline))
+					{
+						this.nl(tw, level);
+						tw.Write(']');
+					}
+					else
+					{
+						tw.Write("]");
 					}
 				}
-				if (whiteL != null) tw.Write(wsl);
-				if (n > 0 && !value.Inline)
-				{
-					this.nl(tw, level);
-					tw.Write(']');
-				}
-				else
-				{
-					tw.Write(" ]");
-				}
 				break;
+
 				case JsonType.Boolean:
-				tw.Write(separator);
-				tw.Write(value ? "true" : "false");
+				{
+					tw.Write(separator);
+					tw.Write(value ? "true" : "false");
+				}
 				break;
+
 				case JsonType.String:
-				this.writeString(((JsonPrimitive)value).GetRawString(), tw, level, hasComment, separator);
+				{
+					this.writeString(((JsonPrimitive)value).GetRawString(), tw, level, hasComment, !value.Flags.HasFlag(HjsonValue.Flags.NoEscape), separator, value.Flags.HasFlag(HjsonValue.Flags.Multiline), value.Flags.HasFlag(HjsonValue.Flags.Force));
+				}
 				break;
+
 				default:
-				tw.Write(separator);
-				tw.Write(((JsonPrimitive)value).GetRawString());
+				{
+					tw.Write(separator);
+					tw.Write(((JsonPrimitive)value).GetRawString());
+				}
 				break;
 			}
 		}
 
 		private static string escapeName(string name)
 		{
-			if (name.Length == 0 || needsEscapeName.IsMatch(name))
+			if (name.Length == 0 || (name.Contains(' ') && needsEscapeName.IsMatch(name)))
 				return "\"" + JsonWriter.EscapeString(name) + "\"";
 			else
 				return name;
 		}
 
-		private void writeString(string value, TextWriter tw, int level, bool hasComment, string separator)
+		private void writeString(string value, TextWriter tw, int level, bool hasComment, bool escape, string separator, bool multiline, bool force)
 		{
-			if (value == "") { tw.Write(separator + "\"\""); return; }
+			if (value == "") 
+			{ 
+				tw.Write(separator + "\"\""); 
+				return; 
+			}
+
+			if (value == null && force)
+			{
+				tw.Write(separator + "null"); 
+				return;
+			}
 
 			char left = value[0], right = value[value.Length - 1];
 			char left1 = value.Length > 1 ? value[1] : '\0', left2 = value.Length > 2 ? value[2] : '\0';
-			var doEscape = true; // hasComment || value.Any(c => needsQuotes(c));
+			//var doEscape = true; // hasComment || value.Any(c => needsQuotes(c));
 
-			if (doEscape ||
+			if (escape ||
 			  BaseReader.IsWhite(left) || BaseReader.IsWhite(right) ||
 			  left == '"' ||
 			  left == '\'' ||
@@ -227,8 +232,8 @@ namespace Hjson
 				// format or we must replace the offending characters with safe escape
 				// sequences.
 
-				if (!value.Any(c => needsEscape(c))) tw.Write(separator + "\"" + value + "\"");
-				else if (!value.Any(c => needsEscapeML(c)) && !value.Contains("'''") && !value.All(c => BaseReader.IsWhite(c))) this.writeMLString(value, tw, level, separator);
+				if (!multiline && !value.Any(c => needsEscape(c))) tw.Write(separator + "\"" + value + "\"");
+				else if (multiline || (!value.Any(c => needsEscapeML(c)) && !value.Contains("'''") && !value.All(c => BaseReader.IsWhite(c)))) this.writeMLString(value, tw, level, separator);
 				else tw.Write(separator + "\"" + JsonWriter.EscapeString(value) + "\"");
 			}
 			else
@@ -241,13 +246,13 @@ namespace Hjson
 		{
 			var lines = value.Replace("\r", "").Split('\n');
 
-			if (lines.Length == 1)
-			{
-				tw.Write(separator + "'''");
-				tw.Write(lines[0]);
-				tw.Write("'''");
-			}
-			else
+			//if (lines.Length == 1)
+			//{
+			//	tw.Write(separator + "'''");
+			//	tw.Write(lines[0]);
+			//	tw.Write("'''");
+			//}
+			//else
 			{
 				level++;
 				this.nl(tw, level);

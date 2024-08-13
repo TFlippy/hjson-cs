@@ -92,9 +92,15 @@ namespace Hjson
 				case "inf":
 				case "+Inf":
 				case "Inf":
+				case "+infinity":
+				case "infinity":
+				case "+Infinity":
+				case "Infinity":
 				return double.PositiveInfinity;
 				case "-inf":
 				case "-Inf":
+				case "-infinity":
+				case "-Infinity":
 				return double.NegativeInfinity;
 				case "nan":
 				case "NaN":
@@ -110,7 +116,10 @@ namespace Hjson
 			var val = value.Qd();
 			if (double.IsPositiveInfinity(val)) return "Inf";
 			else if (double.IsNegativeInfinity(val)) return "-Inf";
-			else if (double.IsNaN(val)) return "NaN";
+			else if (double.IsNaN(val))
+			{
+				return "\"NaN\"";
+			}
 			else if (isNegativeZero(val)) return "-0";
 			else return null;
 		}
